@@ -203,6 +203,8 @@ all	:	 $(OUTPUT).ovl
 $(OUTPUT).ovl		:	$(OUTPUT).elf $(OUTPUT).nacp 
 	@elf2nro $< $@ $(NROFLAGS)
 	@echo "built ... $(notdir $(OUTPUT).ovl)"
+	@printf 'ULTR' >> $@
+	@printf "Ultrahand signature has been added.\n"
 
 $(OUTPUT).elf	:	$(OFILES)
 
