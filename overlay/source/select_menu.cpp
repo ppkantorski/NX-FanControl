@@ -8,7 +8,7 @@ SelectMenu::SelectMenu(int i, TemperaturePoint* fanCurveTable, bool* tableIsChan
     this->_tableIsChanged = tableIsChanged;
 
     this->_saveBtn = new tsl::elm::ListItem("Save");
-    this->_tempLabel = new tsl::elm::CategoryHeader(std::to_string((this->_fanCurveTable + this->_i)->temperature_c) + "C", true);
+    this->_tempLabel = new tsl::elm::CategoryHeader(std::to_string((this->_fanCurveTable + this->_i)->temperature_c) + "°C", true);
     this->_fanLabel = new tsl::elm::CategoryHeader(std::to_string((int)((this->_fanCurveTable + this->_i)->fanLevel_f * 100)) + "%", true);
 }
 
@@ -17,32 +17,34 @@ tsl::elm::Element* SelectMenu::createUI(){
     auto list = new tsl::elm::List();
 
     list->addItem(this->_tempLabel);
-    auto stepTemp = new tsl::elm::StepTrackBar("C", 21);
-    stepTemp->setValueChangedListener([this](u8 value)
+    auto trackTemp = new tsl::elm::TrackBar("°C");
+    trackTemp->setValueChangedListener([this](u16 value)
     {
-        this->_tempLabel->setText(std::to_string(value * 5) + "C");
-        (this->_fanCurveTable + this->_i)->temperature_c = value * 5;
+        this->_tempLabel->setText(std::to_string(value) + "°C");
+        (this->_fanCurveTable + this->_i)->temperature_c = value;
         this->_saveBtn->setText("Save");
     });
-    stepTemp->setProgress(((this->_fanCurveTable + this->_i)->temperature_c) / 5);
-    list->addItem(stepTemp);
+    trackTemp->setProgress((this->_fanCurveTable + this->_i)->temperature_c);
+    list->addItem(trackTemp);
 
     list->addItem(this->_fanLabel);
-    auto stepFanL = new tsl::elm::StepTrackBar("%", 21);
-    stepFanL->setValueChangedListener([this](u8 value)
+    auto trackFanL = new tsl::elm::TrackBar("%");
+    trackFanL->setValueChangedListener([this](u16 value)
     {
-        this->_fanLabel->setText(std::to_string(value * 5) + "%");
-        (this->_fanCurveTable + this->_i)->fanLevel_f = (float)(value * 5)/100;
+        this->_fanLabel->setText(std::to_string(value) + "%");
+        (this->_fanCurveTable + this->_i)->fanLevel_f = (float)value / 100;
         this->_saveBtn->setText("Save");
     });
-    stepFanL->setProgress(((int)((this->_fanCurveTable + this->_i)->fanLevel_f * 100)) / 5);
-    list->addItem(stepFanL);
+    trackFanL->setProgress((int)((this->_fanCurveTable + this->_i)->fanLevel_f * 100));
+    list->addItem(trackFanL);
+
+    list->addItem(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {}), 20);
 
     this->_saveBtn->setClickListener([this](uint64_t keys) 
     {
-	    if (keys & HidNpadButton_A) 
+        if (keys & HidNpadButton_A) 
         {
-		    WriteConfigFile(this->_fanCurveTable);
+            WriteConfigFile(this->_fanCurveTable);
 
             if(IsRunning() != 0)
             {
@@ -58,11 +60,11 @@ tsl::elm::Element* SelectMenu::createUI(){
                 
             this->_saveBtn->setText("Saved!");
             *this->_tableIsChanged = true;
-		    return true;
-		}
-		
+            return true;
+        }
+        
         return false;
-		
+        
     });
 
     list->addItem(this->_saveBtn);
